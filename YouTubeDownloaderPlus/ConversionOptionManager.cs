@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using YouTubeDownloader;
+﻿using YouTubeDownloader;
 
 namespace YouTubeDownloaderPlus
 {
     internal class ConversionOptionManager
     {
-        private static readonly ConversionOption[] _conversionOptions = new ConversionOption[]
+        private static readonly ConversionOption[] _conversionOptions = new[]
             {
                 new ConversionOption("iPod/iPhone video (Apple QuickTime MOV)",
                                      "-threads 2 -y -i \"{0}\" -f mov -crf 25 -maxrate 1M -vcodec libxvid -bufsize 8M -qmin 3 -qmax 5 -s qvga -strict experimental -acodec aac -ab 128k \"{1}\"",
@@ -34,8 +30,10 @@ namespace YouTubeDownloaderPlus
                 new ConversionOption("MP3-player (audio only)",
                                      "-threads 2 -vsync 1 -y -i \"{0}\" -vn -acodec libmp3lame -ab 128k -ar 44100 -ac 2 -f mp3 \"{1}\"",
                                      "mp3", YouTubeDownloader.YouTubeDownloader.VideoStreamTypes.Any),
-                new ConversionOption("No conversion (FLV)", null, "flv", YouTubeDownloader.YouTubeDownloader.VideoStreamTypes.FLV),
-                new ConversionOption("No conversion (MP4)", null, "mp4", YouTubeDownloader.YouTubeDownloader.VideoStreamTypes.MP4,
+                new ConversionOption("No conversion (FLV)", null, "flv",
+                                     YouTubeDownloader.YouTubeDownloader.VideoStreamTypes.FLV),
+                new ConversionOption("No conversion (MP4)", null, "mp4",
+                                     YouTubeDownloader.YouTubeDownloader.VideoStreamTypes.MP4,
                                      "-threads 2 -vsync 1 -y -i \"{0}\" -vcodec mpeg4 -vtag xvid -crf 18 -b 1.5M -minrate 300k -maxrate 1.8M -bufsize 10M -qmin 5 -qmax 28 -acodec libmp3lame -ab 128k -ar 44100 -ac 2 -f avi \"{1}\"")
             };
 

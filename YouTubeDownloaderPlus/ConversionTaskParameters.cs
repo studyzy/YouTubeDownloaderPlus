@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel;
 using System.Windows.Forms;
 using YouTubeDownloader;
 
 namespace YouTubeDownloaderPlus
 {
-    struct ConversionTaskParameters
+    internal struct ConversionTaskParameters
     {
-        public string OriginalFileLocation;
-        public ConversionOption ConversionProfile;
-        public int QualityIndex;
-        public bool IndirectConversion;
         public BackgroundWorker BackgroundWorker;
+        public ConversionOption ConversionProfile;
+        public bool IndirectConversion;
+        public string OriginalFileLocation;
+        public int QualityIndex;
 
         public Label lbFileName, lbNetSpeed, lblProcessState;
         public ProgressBar progressIndicator;
