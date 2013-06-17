@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using YouTubeDownloader;
 
-namespace YouTubeDownloaderExt
+namespace YouTubeDownloaderPlus
 {
     public partial class MainForm : Form
     {

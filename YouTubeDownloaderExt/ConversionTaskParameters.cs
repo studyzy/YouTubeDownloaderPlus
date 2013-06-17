@@ -6,7 +6,7 @@ using System.Text;
 using System.Windows.Forms;
 using YouTubeDownloader;
 
-namespace YouTubeDownloaderExt
+namespace YouTubeDownloaderPlus
 {
     struct ConversionTaskParameters
     {

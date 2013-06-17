@@ -7,8 +7,8 @@
     <ProjectGuid>{01800DB0-C589-43EA-B728-798B14D0F882}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>YouTubeDownloaderExt</RootNamespace>
-    <AssemblyName>YouTubeDownloaderExt</AssemblyName>
+    <RootNamespace>YouTubeDownloaderPlus</RootNamespace>
+    <AssemblyName>YouTubeDownloaderPlus</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -70,6 +70,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

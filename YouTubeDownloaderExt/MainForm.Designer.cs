@@ -1,4 +1,4 @@
-﻿namespace YouTubeDownloaderExt
+﻿namespace YouTubeDownloaderPlus
 {
     partial class MainForm
     {

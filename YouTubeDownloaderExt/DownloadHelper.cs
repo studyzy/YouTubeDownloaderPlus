@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using YouTubeDownloader;
 using YouTubeDownloader.Properties;
 
-namespace YouTubeDownloaderExt
+namespace YouTubeDownloaderPlus
 {
     class DownloadHelper
     {
