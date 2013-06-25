@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using YouTubeDownloader;
 
@@ -61,56 +64,79 @@ namespace YouTubeDownloaderPlus
             int index = 0;
             foreach (string line in lines)
             {
-                var progressIndicator = new ProgressBar();
-                var lblProcessState = new Label();
-                var lbFileName = new Label();
-                var lbNetSpeed = new Label();
-                groupBox1.Controls.Add(lbNetSpeed);
-                groupBox1.Controls.Add(lbFileName);
-                groupBox1.Controls.Add(lblProcessState);
-                groupBox1.Controls.Add(progressIndicator);
-                int step = 30;
-                progressIndicator.Location = new Point(500, 30 + index*step);
-                progressIndicator.Size = new Size(160, 12);
-                lblProcessState.AutoSize = true;
-                lblProcessState.Location = new Point(345, 30 + index*step);
-                lbFileName.AutoSize = true;
-                lbFileName.Location = new Point(22, 30 + index*step);
-                lbNetSpeed.AutoSize = true;
-                lbNetSpeed.Location = new Point(281, 30 + index*step);
-                index++;
-                count++;
-                BackgroundWorker backgroundWorker = InitWorker();
+                foreach (string url in GetVideoUrls(line))
+                {
+                    var progressIndicator = new ProgressBar();
+                    var lblProcessState = new Label();
+                    var lbFileName = new Label();
+                    var lbNetSpeed = new Label();
+                    panel1.Controls.Add(lbNetSpeed);
+                    panel1.Controls.Add(lbFileName);
+                    panel1.Controls.Add(lblProcessState);
+                    panel1.Controls.Add(progressIndicator);
+                    int step = 30;
+                    progressIndicator.Location = new Point(500, 30 + index*step);
+                    progressIndicator.Size = new Size(160, 12);
+                    lblProcessState.AutoSize = true;
+                    lblProcessState.Location = new Point(345, 30 + index*step);
+                    lbFileName.AutoSize = true;
+                    lbFileName.Location = new Point(22, 30 + index*step);
+                    lbNetSpeed.AutoSize = true;
+                    lbNetSpeed.Location = new Point(281, 30 + index*step);
+                    index++;
+                    count++;
+                    BackgroundWorker backgroundWorker = InitWorker();
 
-                var argument = new ConversionTaskParameters
-                    {
-                        ConversionProfile = cmbConvertionOptions.SelectedItem as ConversionOption,
-                        OriginalFileLocation = line,
-                        QualityIndex = cmbQuality.SelectedIndex,
-                        IndirectConversion = ApplicationSettings.Instance.UseIndirectConversion,
-                        BackgroundWorker = backgroundWorker,
-                        lbFileName = lbFileName,
-                        lbNetSpeed = lbNetSpeed,
-                        lblProcessState = lblProcessState,
-                        progressIndicator = progressIndicator
-                    };
+                    var argument = new ConversionTaskParameters
+                        {
+                            ConversionProfile = cmbConvertionOptions.SelectedItem as ConversionOption,
+                            OriginalFileLocation = url,
+                            QualityIndex = cmbQuality.SelectedIndex,
+                            IndirectConversion = ApplicationSettings.Instance.UseIndirectConversion,
+                            BackgroundWorker = backgroundWorker,
+                            lbFileName = lbFileName,
+                            lbNetSpeed = lbNetSpeed,
+                            lblProcessState = lblProcessState,
+                            progressIndicator = progressIndicator
+                        };
 
-                dictionary.Add(backgroundWorker, argument);
+                    dictionary.Add(backgroundWorker, argument);
 #if DEBUG
-                var e1 = new DoWorkEventArgs(argument);
-                backgroundWorker_DoWork(null, e1);
+                    var e1 = new DoWorkEventArgs(argument);
+                    backgroundWorker_DoWork(null, e1);
 
 #else
 
                 backgroundWorker.RunWorkerAsync(argument);
 #endif
+                }
             }
         }
+
+        private IList<string> GetVideoUrls(string playListUrl)
+        {
+            if (!playListUrl.Contains("playlist"))
+            {
+                return new List<string>(){playListUrl};
+            }
+            var html = DownloadHelper.DownloadHtml(playListUrl);
+            var list = watchRegex.Matches(html);
+            var result = new List<string>();
+            foreach (Match match in list)
+            {
+                string wUrl = match.Groups[1].Value;
+                Debug.WriteLine(wUrl);
+                result.Add("https://www.youtube.com"+wUrl);
+            }
+            return result.Distinct().ToList();
+        }
+        private static Regex watchRegex=new Regex(@"(/watch\?v=.*?)&");
 
 
         private BackgroundWorker InitWorker()
         {
             var backgroundWorker = new BackgroundWorker();
+            
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.WorkerSupportsCancellation = true;
             backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
@@ -121,6 +147,7 @@ namespace YouTubeDownloaderPlus
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            ThreadCount--;
             if (e.Error != null)
             {
                 MessageBox.Show(e.Error.Message);
@@ -132,10 +159,19 @@ namespace YouTubeDownloaderPlus
             }
         }
 
+        private static int ThreadCount = 0;
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            var argument = (ConversionTaskParameters) e.Argument;
+            var argument = (ConversionTaskParameters)e.Argument;
             BackgroundWorker backgroundWorker = argument.BackgroundWorker;
+
+            while (ThreadCount>=2)
+            {
+                backgroundWorker.ReportProgress(0,"Waiting in queue");
+                Thread.Sleep(5000);
+            }
+            ThreadCount++;
+          
             //this.CreateDownloadFolder();
             if (argument.ConversionProfile != null)
             {

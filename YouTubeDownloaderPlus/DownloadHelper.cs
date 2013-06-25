@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Text;
 using System.Windows.Forms;
 using YouTubeDownloader;
 using YouTubeDownloader.Properties;
@@ -314,6 +316,17 @@ namespace YouTubeDownloaderPlus
                 resultSize = num;
             }
             return flag;
+        }
+
+        public static string DownloadHtml(string url)
+        {
+        
+            WebRequest wrt;
+            wrt = WebRequest.Create(url);
+            wrt.Credentials = CredentialCache.DefaultCredentials;
+            WebResponse wrp;
+            wrp = wrt.GetResponse();
+            return new StreamReader(wrp.GetResponseStream(), Encoding.UTF8).ReadToEnd(); 
         }
     }
 }
