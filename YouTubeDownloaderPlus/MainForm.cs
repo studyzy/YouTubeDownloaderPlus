@@ -59,7 +59,7 @@ namespace YouTubeDownloaderPlus
         {
             dictionary = new Dictionary<BackgroundWorker, ConversionTaskParameters>();
             ApplicationSettings.Instance.DefaultDownloadFolder = txbSaveFolder.Text;
-
+            panel1.Controls.Clear();
             string[] lines = richTextBox1.Text.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
             int index = 0;
             foreach (string line in lines)
@@ -76,7 +76,7 @@ namespace YouTubeDownloaderPlus
                     panel1.Controls.Add(progressIndicator);
                     int step = 30;
                     progressIndicator.Location = new Point(500, 30 + index*step);
-                    progressIndicator.Size = new Size(160, 12);
+                    progressIndicator.Size = new Size(160, 15);
                     lblProcessState.AutoSize = true;
                     lblProcessState.Location = new Point(345, 30 + index*step);
                     lbFileName.AutoSize = true;
@@ -147,7 +147,9 @@ namespace YouTubeDownloaderPlus
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            ThreadCount--;
+            //ThreadCount--;
+            //Interlocked.Decrement(ref ThreadCount);
+            semaphore.Release();
             if (e.Error != null)
             {
                 MessageBox.Show(e.Error.Message);
@@ -158,19 +160,21 @@ namespace YouTubeDownloaderPlus
                 toolStripStatusLabel1.Text = "总共" + count + "个,完成了" + finished + "个";
             }
         }
-
-        private static int ThreadCount = 0;
+        private static SemaphoreSlim semaphore=new SemaphoreSlim(2,2);
+        //private static int ThreadCount = 0;
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             var argument = (ConversionTaskParameters)e.Argument;
             BackgroundWorker backgroundWorker = argument.BackgroundWorker;
-
-            while (ThreadCount>=2)
-            {
-                backgroundWorker.ReportProgress(0,"Waiting in queue");
-                Thread.Sleep(5000);
-            }
-            ThreadCount++;
+            backgroundWorker.ReportProgress(0, "Waiting in queue");
+            semaphore.Wait();
+            //while (ThreadCount>=2)
+            //{
+            //    backgroundWorker.ReportProgress(0,"Waiting in queue");
+            //    Thread.Sleep(5000);
+            //}
+            ////ThreadCount++;
+            //Interlocked.Increment(ref ThreadCount);
           
             //this.CreateDownloadFolder();
             if (argument.ConversionProfile != null)
