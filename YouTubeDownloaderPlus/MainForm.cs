@@ -229,6 +229,11 @@ namespace YouTubeDownloaderPlus
                 string str6 = DateTime.Now.Ticks.ToString();
                 string targetTmpFile = Path.Combine(ApplicationSettings.Instance.DefaultDownloadFolder, str6);
                 string targetFile = Path.Combine(ApplicationSettings.Instance.DefaultDownloadFolder, str5);
+                if (File.Exists(targetFile))
+                {
+                    backgroundWorker.ReportProgress(0, "Exist file:" + fileNameWithoutExtension);
+                    return;
+                }
                 long resultSize = 0L;
                 result.ResultPath = targetFile;
                 if (((argument.ConversionProfile.ConversionStringTemplate != null) || flag) &&
@@ -252,6 +257,14 @@ namespace YouTubeDownloaderPlus
                 }
                 result.FileSize = resultSize;
                 e.Result = result;
+                try
+                {
+                    DownloadSubtitle(uRL, fileNameWithoutExtension);
+                }
+                catch (Exception ex)
+                {
+                    //todo
+                }
             }
         }
 
@@ -299,5 +312,101 @@ namespace YouTubeDownloaderPlus
                 par.progressIndicator.Value = par.progressIndicator.Maximum;
             }
         }
+
+        private void btnDownloadSubtitle_Click(object sender, EventArgs e)
+        {
+            string[] lines = richTextBox1.Text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (string line in lines)
+            {
+                foreach (string url in GetVideoUrls(line))
+                {
+                    try
+                    {
+                        var subtitleUrl = GetEnglishSubtitleUrl(url);
+                        string fileName;
+                        var content = DownloadHelper.DownloadTxtFile(subtitleUrl, out fileName);
+                        var path = txbSaveFolder.Text + "\\" + fileName;
+                        WriteFile(path, content);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(url + " error:" + ex.Message);
+                    }
+                }
+            }
+            MessageBox.Show("OK");
+        }
+
+        private void DownloadSubtitle(string vUrl, string vFileName)
+        {
+            var subtitleUrl = GetEnglishSubtitleUrl(vUrl);
+            string fileName;
+            var content = DownloadHelper.DownloadTxtFile(subtitleUrl, out fileName);
+            fileName = Path.GetFileNameWithoutExtension(vFileName) + ".srt";
+            var path = txbSaveFolder.Text + "\\" + fileName;
+            WriteFile(path, content);
+        }
+        private void WriteFile(string fileName, string content)
+        {
+            using (StreamWriter sw = new StreamWriter(fileName,false))
+            {
+                sw.Write(content);
+                sw.Close();
+            }
+        }
+        private string GetEnglishSubtitleUrl(string videoUrl)
+        {
+            string postUrl = "http://www.amara.org/widget/rpc/xhr/show_widget";
+            string postData = "video_url=%22"+videoUrl+"%22&is_remote=false&base_state=%7B%7D";
+           var txt= DownloadHelper.DownloadHtml(postUrl, postData);
+            //MessageBox.Show(txt);
+            txt=txt.Substring( txt.IndexOf("\"en\""));
+            txt = txt.Substring(txt.IndexOf("\"pk\":")+6);
+            var pk = txt.Substring(0, txt.IndexOf(","));
+
+            txt = txt.Substring(txt.IndexOf("video_id") + 12);
+            var vid = txt.Substring(0, txt.IndexOf("\""));
+            return string.Format("http://www.amara.org/widget/download-subs/srt/?video_id={0}&lang_pk={1}",vid,pk);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Regex regex=new Regex(@"\d+");
+            DirectoryInfo di=new DirectoryInfo(txbSaveFolder.Text);
+            foreach (var srt in di.GetFiles("*.srt"))
+            {
+                if (regex.IsMatch(srt.Name))
+                {
+                    var number = regex.Match(srt.Name).Value;
+                    var vName = GetVideoName(number);
+                    if (vName != null)
+                    {
+                        var newPath = di.FullName + "\\" + vName + ".srt";
+                        File.Move(srt.FullName,newPath);
+                    }
+                }
+            }
+        }
+
+        private string GetVideoName(string number)
+        {
+            Regex regex = new Regex(@"\d+");
+            DirectoryInfo di = new DirectoryInfo(txbSaveFolder.Text);
+            foreach (var srt in di.GetFiles("*.mp4"))
+            {
+                if (regex.IsMatch(srt.Name))
+                {
+                    var n = regex.Match(srt.Name).Value;
+                    if (n == number)
+                    {
+                        return Path.GetFileNameWithoutExtension(srt.Name);
+                    }
+                }
+            }
+            return null;
+        }
+
+    
     }
 }

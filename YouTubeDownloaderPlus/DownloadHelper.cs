@@ -328,5 +328,44 @@ namespace YouTubeDownloaderPlus
             wrp = wrt.GetResponse();
             return new StreamReader(wrp.GetResponseStream(), Encoding.UTF8).ReadToEnd(); 
         }
+        public static string DownloadTxtFile(string url,out string fileName)
+        {
+
+            WebRequest wrt;
+            wrt = WebRequest.Create(url);
+            wrt.Credentials = CredentialCache.DefaultCredentials;
+            WebResponse wrp;
+            wrp = wrt.GetResponse();
+            fileName = "";
+            var content = wrp.Headers.GetValues("content-disposition");
+            foreach (var str in content)
+            {
+                if (str.IndexOf("filename=") >= 0)
+                {
+                    fileName = str.Substring(str.IndexOf("filename=")+9);
+                }
+            }
+
+            return new StreamReader(wrp.GetResponseStream(), Encoding.UTF8).ReadToEnd();
+        }
+
+        public static string DownloadHtml(string url,string post)
+        {
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(post);   
+            HttpWebRequest wrt;
+            wrt = (HttpWebRequest)WebRequest.Create(url);
+            wrt.Credentials = CredentialCache.DefaultCredentials;
+            wrt.Method = "POST";
+            wrt.CookieContainer=new CookieContainer();
+            //wrt.CookieContainer.Add(new Uri("http://www.amara.org"), new Cookie("sessionid", "d61686dc3651ff100c09c0f4a3d0df66"));
+            wrt.ContentLength = bytes.Length;
+            wrt.ContentType = "application/x-www-form-urlencoded";
+            Stream dataStream = wrt.GetRequestStream();
+            dataStream.Write(bytes, 0, bytes.Length);
+            dataStream.Close();
+            WebResponse wrp;
+            wrp = wrt.GetResponse();
+            return new StreamReader(wrp.GetResponseStream(), Encoding.UTF8).ReadToEnd();
+        }
     }
 }
